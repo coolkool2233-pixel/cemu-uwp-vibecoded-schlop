@@ -7,6 +7,7 @@ on:
       - coderabbit/precache-botw-shaders/152ae662
     paths:
       - .github/workflows/build-xbox.yml
+      - .gitattributes
       - patches/**
 
 permissions:

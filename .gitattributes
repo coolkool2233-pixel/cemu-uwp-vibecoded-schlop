@@ -1,0 +1,2 @@
+# Unified diffs must retain LF, including when checked out on Windows.
+*.patch text eol=lf
