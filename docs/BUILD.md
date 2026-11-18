@@ -1,5 +1,7 @@
 <!-- coderabbit-ai-generated:v1 -->
 
+<!-- coderabbit-ai-generated-section:v1:c8ec148903cbd160e2c1b078b2d8cf68ed4866369e42ce6826f07fda5d4b1eb2 -->
+
 <!-- coderabbit-ai-generated-section:v1:72e9c7f1c1216ba5dcb62b32b4d09179add2c5b72e70cb1983440cf7678bc9f8 -->
 
 <!-- coderabbit-ai-generated-section:v1:9ecd51a28a35256cf798f0abe6672a694e2d4a3c14c3684fc1140fe3e53c4ead -->
@@ -72,7 +74,9 @@ The migration marker is needed on the pinned version: without it, configuration 
 
 ## Build in GitHub Actions
 
-The **[Build Xbox MSIX workflow](https://github.com/coolkool2233-pixel/idfk/actions/workflows/build-xbox.yml)** compiles the pinned upstream source with both patches on a Windows 2022 runner. A workflow file alone does not establish a successful build; check the selected run's result.
+The **[Build Xbox MSIX workflow](https://github.com/coolkool2233-pixel/idfk/actions/workflows/build-xbox.yml)** compiles the pinned upstream source with both patches on a Windows 2022 runner. **[Build 44286445115 passed](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115)** on 18 November 2026 and produced the signed x64 package `0.1.902.0` from project commit `f420abf8aa181f58942220e9e328ab38a681ed1d`.
+
+**[Download the verified Windows build artifact](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115/artifacts/14421890902)** (about 68 MB; GitHub sign-in required). Extract the downloaded Actions ZIP, then extract `cemu-botw-precache-uwp-x64.zip` inside it. The app package is `CemuBin_0.1.902.0_x64.msix`; its manifest gives it the custom Cemu BOTW Precache identity. The artifact expires **2 December 2026**. Save a copy or run the workflow again for a new build.
 
 1. Open the workflow in the repository's **Actions** tab. The first workflow push starts a build on the task branch. For another attempt, select **Run workflow** and choose the branch containing the patches.
 2. Wait for **Cemu BOTW Precache · x64 UWP** to succeed. A cold dependency build can take an hour or more.
@@ -134,9 +138,9 @@ With Python 3, Git, OpenSSL and a C++17 compiler, from this package's root:
 python3 tests/check_patch.py /path/to/Cemu-UWP
 ```
 
-The source clone must contain the pinned commit. The check reads committed files into a temporary directory and leaves your checkout untouched, applies both patches, checks the manifest and local/CI signing consistency, creates a temporary test certificate with OpenSSL, then compiles the patched policy header and actual `BeginPreload` function with fake record storage. It covers 48 setting/title combinations, absent/empty caches, the 20-session boundary, usage ordering, opt-out restoration and the existing 400-entry Quick start fallback. Both patches are then reversed and the original manifest bytes are checked. The manifest restoration guard in the PowerShell script is checked as source; Windows script execution and actual MSIX signing remain unverified.
+The source clone must contain the pinned commit. The check reads committed files into a temporary directory and leaves your checkout untouched, applies both patches, checks the manifest and local/CI signing consistency, creates a temporary test certificate with OpenSSL, then compiles the patched policy header and actual `BeginPreload` function with fake record storage. It covers 48 setting/title combinations, absent/empty caches, the 20-session boundary, usage ordering, opt-out restoration and the existing 400-entry Quick start fallback. Both patches are then reversed and the original manifest bytes are checked. The manifest restoration guard in the local PowerShell script is checked as source; that local script has not been executed on Windows. The separate Windows Actions workflow successfully compiled, signed and checked the generated MSIX.
 
-These checks passed on Linux with Python 3.14.4, Git 2.53.0, g++ 15.2.0 and OpenSSL 3.5.5. **The complete Windows/UWP build, launcher interaction and Xbox BOTW runtime/performance checks have not been run.** The selection checks exercise no GPU or game assets; they do not validate native driver compilation or cache compatibility on a device.
+These checks passed on Linux with Python 3.14.4, Git 2.53.0, g++ 15.2.0 and OpenSSL 3.5.5. **The [Windows/UWP Release build and package checks passed](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115)** in 31 minutes 56 seconds using CMake 3.29 and Visual Studio 2022. The first attempt failed because Windows changed patch file line endings; preserving LF in `.gitattributes` fixed that before the successful build. **Xbox installation, launcher interaction, certificate trust, coexistence and BOTW runtime/performance remain unverified.** The selection checks exercise no GPU or game assets; they do not validate native driver compilation or cache compatibility on a device.
 
 
 <!-- /coderabbit-ai-generated:v1 -->

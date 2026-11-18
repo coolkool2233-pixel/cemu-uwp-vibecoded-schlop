@@ -1,5 +1,7 @@
 <!-- coderabbit-ai-generated:v1 -->
 
+<!-- coderabbit-ai-generated-section:v1:d68bb950f0048698ec02a7bbf04865425008536768a56fb6f343b0bba1c526d0 -->
+
 <!-- coderabbit-ai-generated-section:v1:e82e3a98983f452b5356c169c6e93bda90ddb5e714ca0897fe6086f2b78d822d -->
 
 <!-- coderabbit-ai-generated-section:v1:a0eac20901fddc6613d3d00a47b47fe67d505c3156b3602ffa26c3276c50b500 -->
@@ -37,13 +39,13 @@ Cemu compiles new shaders and graphics pipelines as it encounters them. This pro
 | Load all recorded pipelines for BOTW EU, including older entries normally skipped by the preload filter. | A separate package name, publisher, signing configuration and launch protocol, intended to coexist with PrismFox's build. | One opt-in setting overrides Quick start for BOTW. Turn it off to return to the general settings. |
 
 > [!IMPORTANT]
-> **Source patches — build on Windows before installing.** This repository does not contain a compiled Xbox app. Preloading requires existing shader and D3D12 pipeline caches; unseen effects can still need compilation.
+> **[Download the signed Xbox test build](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115/artifacts/14421890902)** · x64 UWP · `0.1.902.0` · GitHub sign-in required. Extract both ZIP layers to find the MSIX and dependencies. This artifact expires **2 December 2026**. Preloading requires existing shader and D3D12 pipeline caches; unseen effects can still need compilation.
 
 ## Quick start
 
-### 01 · Build your package
+### 01 · Download or build your package
 
-Use **[GitHub Actions](docs/BUILD.md#build-in-github-actions)** to compile on a Windows runner and download the signed MSIX after a successful run. You can also follow the **[local build guide](docs/BUILD.md#apply-and-build-the-patch)** on your own Windows PC.
+Download the **[signed x64 MSIX package](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115/artifacts/14421890902)** from the successful Windows build and install it through Xbox Device Portal with any required included x64 dependencies. See **[GitHub Actions](docs/BUILD.md#build-in-github-actions)** for extraction and rebuild instructions, or follow the **[local build guide](docs/BUILD.md#apply-and-build-the-patch)** on your Windows PC.
 
 Already using the first patch? Apply only `0002` to add the separate package identity, then rebuild.
 
@@ -92,13 +94,13 @@ The new package has separate app storage. Copy any saves, keys, installed update
 
 ## Project status
 
-**Experimental.** The patch selection and package configuration are checked locally; Xbox deployment and performance still need device verification.
+**Experimental.** The **[Windows/UWP build passed](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115)**, including signing and package identity checks. Xbox deployment and performance still need device verification.
 
 | Checked | Still needs verification |
 | :--- | :--- |
-| Both patches apply and reverse on the pinned source. | Complete Windows/UWP build and MSIX signing. |
+| Both patches apply and reverse on the pinned source. | Xbox installation and launcher startup. |
 | 48 title/settings combinations and native cache selection checks. | Simultaneous installation alongside PrismFox's app. |
-| Package identity, signing-subject consistency and a temporary OpenSSL certificate. | BOTW gameplay, memory use and stutter reduction on Xbox. |
+| Windows x64 MSIX build/signing, custom package identity and signature-entry checks. | BOTW gameplay, memory use and stutter reduction on Xbox. |
 
 This prepares **known records**. It cannot generate every shader from a title ID, and Vulkan pipeline files cannot substitute for D3D12 records. Xbox may rebuild recorded pipelines on every launch. [How it works & limits →](docs/BUILD.md#what-is-possible)
 
@@ -117,7 +119,7 @@ The checks use pristine files from the pinned commit and temporary fixtures, lea
 - **[PrismFox67 / Cemu-UWP](https://github.com/PrismFox67/Cemu-UWP)** — the UWP frontend and Direct3D 12 fork this patch set targets.
 - **[The Cemu team](https://github.com/cemu-project/Cemu)** — the Wii U emulator at the foundation of the project.
 
-The upstream credits are preserved in the patched app. No game files, cache databases or compiled app are bundled here. This project is not affiliated with Nintendo.
+The upstream credits are preserved in the patched app. No game files or cache databases are bundled here. Compiled test builds are available through Actions artifacts. This project is not affiliated with Nintendo.
 
 ---
 
