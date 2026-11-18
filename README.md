@@ -35,8 +35,19 @@
 
 ## A little preparation before the adventure
 
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:a1369d79e0b190aa607e17564b38acbc496e98a43e557e7d4b618da7d9b41dbb -->
+
 Cemu compiles new shaders and graphics pipelines as it encounters them. This project moves **recorded BOTW pipeline work** into startup, using Cemu-UWP's existing D3D12 loading flow. It also gives the custom build its own Xbox package identity.
 
+> [!WARNING]
+> **⚠️ AI-Generated Code Notice**
+>
+> The patches and supporting code in this repository were generated with AI and have not been manually audited line by line. Automated checks and a Windows build passed, but Xbox installation and gameplay have not been verified. The code may contain hidden bugs, security vulnerabilities, or unoptimized logic. Test thoroughly before using it in production.
+
+
+<!-- /coderabbit-ai-generated:v1 -->
 | Prepare before play | Keep your own app | Stay in control |
 | :--- | :--- | :--- |
 | Load all recorded pipelines for BOTW EU, including older entries normally skipped by the preload filter. | A separate package name, publisher, signing configuration and launch protocol, intended to coexist with PrismFox's build. | One opt-in setting overrides Quick start for BOTW. Turn it off to return to the general settings. |
