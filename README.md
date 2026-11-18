@@ -1,5 +1,7 @@
 <!-- coderabbit-ai-generated:v1 -->
 
+<!-- coderabbit-ai-generated-section:v1:6774b2c4b5b240b81be5f20bbe1d1ec4764b5ea35cc6088f25b92e50687a0069 -->
+
 <!-- coderabbit-ai-generated-section:v1:d68bb950f0048698ec02a7bbf04865425008536768a56fb6f343b0bba1c526d0 -->
 
 <!-- coderabbit-ai-generated-section:v1:e82e3a98983f452b5356c169c6e93bda90ddb5e714ca0897fe6086f2b78d822d -->
@@ -23,6 +25,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> &nbsp; · &nbsp;
+  <a href="docs/INSTALL-XBOX.md">Xbox install guide</a> &nbsp; · &nbsp;
   <a href="docs/BUILD.md">Build guide</a> &nbsp; · &nbsp;
   <a href="#the-patch-set">The patches</a> &nbsp; · &nbsp;
   <a href="#project-status">Project status</a>
@@ -45,7 +48,7 @@ Cemu compiles new shaders and graphics pipelines as it encounters them. This pro
 
 ### 01 · Download or build your package
 
-Download the **[signed x64 MSIX package](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115/artifacts/14421890902)** from the successful Windows build and install it through Xbox Device Portal with any required included x64 dependencies. See **[GitHub Actions](docs/BUILD.md#build-in-github-actions)** for extraction and rebuild instructions, or follow the **[local build guide](docs/BUILD.md#apply-and-build-the-patch)** on your Windows PC.
+Download the **[signed x64 MSIX package](https://github.com/coolkool2233-pixel/idfk/actions/runs/44286445115/artifacts/14421890902)**, then follow the **[step-by-step Xbox installation guide](docs/INSTALL-XBOX.md)**. See **[GitHub Actions](docs/BUILD.md#build-in-github-actions)** for extraction and rebuild instructions, or follow the **[local build guide](docs/BUILD.md#apply-and-build-the-patch)** on your Windows PC.
 
 Already using the first patch? Apply only `0002` to add the separate package identity, then rebuild.
 

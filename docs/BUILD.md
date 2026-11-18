@@ -1,5 +1,7 @@
 <!-- coderabbit-ai-generated:v1 -->
 
+<!-- coderabbit-ai-generated-section:v1:a8e6b8e331b19c14d11bb4130cb85d1845bab0f143d95a277fb013bd339cee93 -->
+
 <!-- coderabbit-ai-generated-section:v1:c8ec148903cbd160e2c1b078b2d8cf68ed4866369e42ce6826f07fda5d4b1eb2 -->
 
 <!-- coderabbit-ai-generated-section:v1:72e9c7f1c1216ba5dcb62b32b4d09179add2c5b72e70cb1983440cf7678bc9f8 -->
@@ -37,7 +39,7 @@ Windows derives the package full name from the identity fields. Its shape for th
 
 The second patch updates the manifest, local and CI signing settings, launcher About heading, protocol registration and current CI archive name. It also stops checking PrismFox's releases for app updates: install future custom builds manually. Existing upstream credits are retained. The local build script restores the original manifest bytes after version stamping, preserving the customized identity even before you commit the patch.
 
-Install the newly built MSIX through Xbox Device Portal as **Cemu BOTW Precache** while leaving the existing app installed. The generated MSIX filename may still start with `CemuBin`; Xbox uses the manifest identity for installation. **Actual simultaneous installation still needs verification on an Xbox.**
+Follow the [step-by-step Xbox installation guide](INSTALL-XBOX.md) to install the MSIX through Xbox Device Portal as **Cemu BOTW Precache** while leaving the existing app installed. The generated MSIX filename may still start with `CemuBin`; Xbox uses the manifest identity for installation. **Actual simultaneous installation still needs verification on an Xbox.**
 
 This identity creates separate app storage and settings. Existing saves, keys, installed updates/DLC and caches remain with the original package until you copy them to the custom package. To keep external storage independent too, choose separate external save/data folders for the two apps; explicitly selecting the same USB folders shares those files. Update any external frontend launch links to the new protocol.
 
