@@ -1,0 +1,204 @@
+diff --git a/src/gui/host/uwp/Package.appxmanifest b/src/gui/host/uwp/Package.appxmanifest
+--- a/src/gui/host/uwp/Package.appxmanifest
++++ b/src/gui/host/uwp/Package.appxmanifest
+@@ -8,15 +8,15 @@
+ 
+   <!-- Publisher must match the subject of the certificate the package is signed with (see .github/workflows) -->
+   <Identity
+-    Name="CemuUWP.Unofficial"
+-    Publisher="CN=CemuUWP"
++    Name="Coolkool2233Pixel.CemuBOTWPrecache"
++    Publisher="CN=Coolkool2233Pixel.CemuBOTWPrecache"
+     Version="0.1.0.0" />
+ 
+-  <mp:PhoneIdentity PhoneProductId="6c1c7a7e-0c51-4bd3-9a23-2f0c6c1b7e11" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
++  <mp:PhoneIdentity PhoneProductId="6aa7e43b-2294-5476-882f-fd936a38f5d1" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+ 
+   <Properties>
+-    <DisplayName>Cemu UWP</DisplayName>
+-    <PublisherDisplayName>Cemu UWP (unofficial)</PublisherDisplayName>
++    <DisplayName>Cemu BOTW Precache</DisplayName>
++    <PublisherDisplayName>coolkool2233-pixel</PublisherDisplayName>
+     <Logo>Assets\StoreLogo.png</Logo>
+   </Properties>
+ 
+@@ -30,10 +30,10 @@
+   </Resources>
+ 
+   <Applications>
+-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Cemu.App">
++    <Application Id="BotwPrecache" Executable="$targetnametoken$.exe" EntryPoint="Cemu.App">
+       <uap:VisualElements
+-        DisplayName="Cemu UWP"
+-        Description="Unofficial UWP build of the Cemu Wii U emulator with a Direct3D 12 renderer. Not affiliated with Nintendo."
++        DisplayName="Cemu BOTW Precache"
++        Description="Cemu BOTW Precache by coolkool2233-pixel, based on PrismFox67 Cemu-UWP. Not affiliated with Nintendo."
+         Square150x150Logo="Assets\Square150x150Logo.png"
+         Square44x44Logo="Assets\Square44x44Logo.png"
+         BackgroundColor="transparent">
+@@ -41,10 +41,10 @@
+         <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#14171c" />
+       </uap:VisualElements>
+       <Extensions>
+-        <!-- frontends can start a game with cemu:?path=<game path> -->
++        <!-- frontends can start a game with cemu-botw-precache:?path=<game path> -->
+         <uap:Extension Category="windows.protocol">
+-          <uap:Protocol Name="cemu">
+-            <uap:DisplayName>Cemu</uap:DisplayName>
++          <uap:Protocol Name="cemu-botw-precache">
++            <uap:DisplayName>Cemu BOTW Precache</uap:DisplayName>
+           </uap:Protocol>
+         </uap:Extension>
+       </Extensions>
+diff --git a/tools/build-uwp-local.ps1 b/tools/build-uwp-local.ps1
+--- a/tools/build-uwp-local.ps1
++++ b/tools/build-uwp-local.ps1
+@@ -1,13 +1,13 @@
+ # Local build of the UWP (Xbox) package, so a code change reaches the Xbox in minutes instead of a ~25 minute CI run.
+ # First run: checks out submodules, bootstraps vcpkg and builds all dependencies (an hour or more). Later runs only
+-# recompile what changed. The package is signed with a local self-signed certificate (CN=CemuUWP, like CI) made with
++# recompile what changed. The package is signed with a local self-signed certificate (CN=Coolkool2233Pixel.CemuBOTWPrecache, like CI) made with
+ # openssl, so nothing is added to the Windows certificate store.
+-# Output: build-uwp-local\AppPackages\...\CemuBin_<version>_x64.msix
++# Output: build-botw-precache-local\AppPackages\...\CemuBin_<version>_x64.msix
+ param([string]$Version = "0.1.900.0")
+ $ErrorActionPreference = 'Stop'
+ $repo = Split-Path $PSScriptRoot -Parent
+ Set-Location $repo
+-$log = "$repo\build-uwp-local.log"
++$log = "$repo\build-botw-precache-local.log"
+ function Log($text) { $text | Out-File $log -Append -Encoding utf8; $text }
+ # native tools write progress to stderr, which Windows PowerShell turns into errors under 'Stop': judge by exit code only
+ function Step($name, [scriptblock]$block) { Log "== $name $(Get-Date -Format T)"; $ErrorActionPreference = 'Continue'; & $block 2>&1 | ForEach-Object { "$_" } | Out-File $log -Append -Encoding utf8; if ($LASTEXITCODE) { throw "$name failed ($LASTEXITCODE), see $log" } }
+@@ -25,25 +25,26 @@
+ if (-not (Test-Path "$repo\dependencies\vcpkg\vcpkg.exe")) { Step 'bootstrap vcpkg' { cmd /c "$repo\dependencies\vcpkg\bootstrap-vcpkg.bat" -disableMetrics } }
+ 
+ # signing certificate, made once
+-$pfx = "$repo\build-uwp-local\CemuUWP_local.pfx"
+-New-Item -ItemType Directory -Force "$repo\build-uwp-local" | Out-Null
++$pfx = "$repo\build-botw-precache-local\CemuBOTWPrecache_local.pfx"
++New-Item -ItemType Directory -Force "$repo\build-botw-precache-local" | Out-Null
+ if (-not (Test-Path $pfx)) {
+ 	$openssl = "C:\Program Files\Git\usr\bin\openssl.exe"
+ 	Step 'certificate' {
+-		& $openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=CemuUWP" -keyout "$repo\build-uwp-local\key.pem" -out "$repo\build-uwp-local\cert.pem" -addext "extendedKeyUsage=codeSigning" -addext "basicConstraints=CA:FALSE"
+-		& $openssl pkcs12 -export -inkey "$repo\build-uwp-local\key.pem" -in "$repo\build-uwp-local\cert.pem" -out $pfx -passout pass:cemu
++		& $openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=Coolkool2233Pixel.CemuBOTWPrecache" -keyout "$repo\build-botw-precache-local\botw-key.pem" -out "$repo\build-botw-precache-local\botw-cert.pem" -addext "extendedKeyUsage=codeSigning" -addext "basicConstraints=CA:FALSE"
++		& $openssl pkcs12 -export -inkey "$repo\build-botw-precache-local\botw-key.pem" -in "$repo\build-botw-precache-local\botw-cert.pem" -out $pfx -passout pass:cemu
+ 	}
+ }
+ 
+ # package version (CI stamps the run number; local builds use a high number so they update over CI builds)
+ $manifest = "$repo\src\gui\host\uwp\Package.appxmanifest"
+ $orig = Get-Content $manifest -Raw
++$origBytes = [System.IO.File]::ReadAllBytes($manifest)
+ try {
+ 	(($orig -replace 'Version="0\.1\.\d+\.0"', "Version=`"$Version`"")) | Set-Content $manifest -NoNewline -Encoding utf8
+-	if (-not (Test-Path "$repo\build-uwp-local\CemuBin.sln") -and -not (Test-Path "$repo\build-uwp-local\Cemu.sln")) {
+-		Step 'cmake configure' { & $cmake -S $repo -B "$repo\build-uwp-local" -G "Visual Studio 18 2026" -A x64 -DCMAKE_SYSTEM_NAME=WindowsStore "-DCMAKE_SYSTEM_VERSION=10.0" }
++	if (-not (Test-Path "$repo\build-botw-precache-local\CemuBin.sln") -and -not (Test-Path "$repo\build-botw-precache-local\Cemu.sln")) {
++		Step 'cmake configure' { & $cmake -S $repo -B "$repo\build-botw-precache-local" -G "Visual Studio 18 2026" -A x64 -DCMAKE_SYSTEM_NAME=WindowsStore "-DCMAKE_SYSTEM_VERSION=10.0" }
+ 	}
+-	$build = { & $cmake --build "$repo\build-uwp-local" --config Release --target CemuBin -- -m "-p:GenerateAppxPackageOnBuild=true" "-p:AppxBundle=Never" "-p:UapAppxPackageBuildMode=SideloadOnly" "-p:AppxPackageSigningEnabled=true" "-p:PackageCertificateKeyFile=$pfx" "-p:PackageCertificatePassword=cemu" "-p:AppxPackageDir=$repo\build-uwp-local\AppPackages/" } # quoted: Windows PowerShell splits a bare -p:Name=value at the colon
++	$build = { & $cmake --build "$repo\build-botw-precache-local" --config Release --target CemuBin -- -m "-p:GenerateAppxPackageOnBuild=true" "-p:AppxBundle=Never" "-p:UapAppxPackageBuildMode=SideloadOnly" "-p:AppxPackageSigningEnabled=true" "-p:PackageCertificateKeyFile=$pfx" "-p:PackageCertificatePassword=cemu" "-p:AppxPackageDir=$repo\build-botw-precache-local\AppPackages/" } # quoted: Windows PowerShell splits a bare -p:Name=value at the colon
+ 	$logStart = (Get-Item $log).Length
+ 	try { Step 'build and package' $build }
+ 	catch {
+@@ -53,9 +54,9 @@
+ 		$tail = (New-Object IO.StreamReader($fs)).ReadToEnd(); $fs.Close()
+ 		if ($tail -notmatch 'LNK1103') { throw }
+ 		Log "LNK1103: deleting bin\Cemu.pdb and the incremental link files, linking again"
+-		Remove-Item -Force -ErrorAction SilentlyContinue "$repo\bin\Cemu.pdb", "$repo\bin\Cemu.ilk", "$repo\build-uwp-local\src\CemuBin.dir\Release\Cemu.ipdb"
++		Remove-Item -Force -ErrorAction SilentlyContinue "$repo\bin\Cemu.pdb", "$repo\bin\Cemu.ilk", "$repo\build-botw-precache-local\src\CemuBin.dir\Release\Cemu.ipdb"
+ 		Step 'build and package (retry)' $build
+ 	}
+ }
+-finally { git -C $repo checkout -- src/gui/host/uwp/Package.appxmanifest } # never leave the stamped version for a commit
+-Get-ChildItem "$repo\build-uwp-local\AppPackages" -Recurse -Filter *.msix | Sort-Object LastWriteTime | Select-Object -Last 1 | ForEach-Object { Log "package: $($_.FullName)" }
++finally { [System.IO.File]::WriteAllBytes($manifest, $origBytes) } # preserve the custom identity and any existing edits
++Get-ChildItem "$repo\build-botw-precache-local\AppPackages" -Recurse -Filter *.msix | Sort-Object LastWriteTime | Select-Object -Last 1 | ForEach-Object { Log "package: $($_.FullName)" }
+diff --git a/.github/workflows/uwp_fork_ci.yml b/.github/workflows/uwp_fork_ci.yml
+--- a/.github/workflows/uwp_fork_ci.yml
++++ b/.github/workflows/uwp_fork_ci.yml
+@@ -287,10 +287,10 @@
+       shell: pwsh
+       run: |
+         # self-signed test certificate, its subject must match Publisher in Package.appxmanifest
+-        $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=CemuUWP" -KeyUsage DigitalSignature -FriendlyName "Cemu UWP test signing" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
++        $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=Coolkool2233Pixel.CemuBOTWPrecache" -KeyUsage DigitalSignature -FriendlyName "Cemu BOTW Precache test signing" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+         $pw = ConvertTo-SecureString -String "cemu" -Force -AsPlainText
+-        Export-PfxCertificate -Cert $cert -FilePath "$env:GITHUB_WORKSPACE\CemuUWP_TemporaryKey.pfx" -Password $pw | Out-Null
+-        Export-Certificate -Cert $cert -FilePath "$env:GITHUB_WORKSPACE\CemuUWP.cer" | Out-Null
++        Export-PfxCertificate -Cert $cert -FilePath "$env:GITHUB_WORKSPACE\CemuBOTWPrecache_TemporaryKey.pfx" -Password $pw | Out-Null
++        Export-Certificate -Cert $cert -FilePath "$env:GITHUB_WORKSPACE\CemuBOTWPrecache.cer" | Out-Null
+ 
+     - name: "Package version"
+       shell: bash
+@@ -312,7 +312,7 @@
+       shell: bash
+       run: |
+         cd build-uwp
+-        cmake --build . --config Release --target CemuBin -- -m -p:GenerateAppxPackageOnBuild=true -p:AppxBundle=Never -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageSigningEnabled=true -p:PackageCertificateKeyFile="$GITHUB_WORKSPACE/CemuUWP_TemporaryKey.pfx" -p:PackageCertificatePassword=cemu -p:AppxPackageDir="$GITHUB_WORKSPACE/AppPackages/" 2>&1 | tee ../build.log
++        cmake --build . --config Release --target CemuBin -- -m -p:GenerateAppxPackageOnBuild=true -p:AppxBundle=Never -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageSigningEnabled=true -p:PackageCertificateKeyFile="$GITHUB_WORKSPACE/CemuBOTWPrecache_TemporaryKey.pfx" -p:PackageCertificatePassword=cemu -p:AppxPackageDir="$GITHUB_WORKSPACE/AppPackages/" 2>&1 | tee ../build.log
+         test ${PIPESTATUS[0]} -eq 0
+ 
+     - name: "Report failure summary"
+@@ -363,17 +363,17 @@
+         cp -r "$PKGDIR"/. uwp-package/
+         rm -rf uwp-package/Dependencies/ARM uwp-package/Dependencies/ARM64 uwp-package/Dependencies/x86 uwp-package/TelemetryDependencies
+         find uwp-package -type f | sort
+-        cd uwp-package && 7z a -tzip ../cemu-uwp-x64.zip . > /dev/null && cd ..
++        cd uwp-package && 7z a -tzip ../cemu-botw-precache-uwp-x64.zip . > /dev/null && cd ..
+         if [ "$GITHUB_REF" = "refs/heads/d3d12-backend" ]; then
+           gh release view ci-latest >/dev/null 2>&1 || gh release create ci-latest --prerelease --title "CI builds" --notes "Automatic builds of the D3D12 / UWP fork. Not official Cemu releases." || true
+-          bash tools/ci/keep_download_count.sh cemu-uwp-x64.zip || true   # GitHub resets the count on replace
+-          gh release upload ci-latest cemu-uwp-x64.zip --clobber
++          bash tools/ci/keep_download_count.sh cemu-botw-precache-uwp-x64.zip || true   # GitHub resets the count on replace
++          gh release upload ci-latest cemu-botw-precache-uwp-x64.zip --clobber
+           bash tools/ci/keep_download_count.sh --json || true   # totals.json for the README badge + release notes line
+-          bash tools/ci/older_versions.sh cemu-uwp-x64.zip "0.1.${{ github.run_number }}" || true   # permanent copy, see the script
++          bash tools/ci/older_versions.sh cemu-botw-precache-uwp-x64.zip "0.1.${{ github.run_number }}" || true   # permanent copy, see the script
+         fi
+ 
+     - name: "Upload artifact"
+       uses: actions/upload-artifact@v6
+       with:
+-        name: cemu-uwp-x64
+-        path: ./cemu-uwp-x64.zip
++        name: cemu-botw-precache-uwp-x64
++        path: ./cemu-botw-precache-uwp-x64.zip
+diff --git a/src/gui/host/HostUI.cpp b/src/gui/host/HostUI.cpp
+--- a/src/gui/host/HostUI.cpp
++++ b/src/gui/host/HostUI.cpp
+@@ -1969,6 +1969,7 @@
+ 
+ 	void _DrawAboutTab()
+ 	{
++		ImGui::TextUnformatted("Cemu BOTW Precache by coolkool2233-pixel");
+ 		ImGui::TextUnformatted(BUILD_VERSION_WITH_NAME_STRING);
+ 		ImGui::TextWrapped(_TR("Cemu UWP by PrismFox67 (github.com/PrismFox67/Cemu-UWP)"));
+ 		ImGui::TextWrapped("Frontend: %s, renderer: Direct3D 12", HostPlatform::GetName());
+diff --git a/src/gui/host/HostApp.cpp b/src/gui/host/HostApp.cpp
+--- a/src/gui/host/HostApp.cpp
++++ b/src/gui/host/HostApp.cpp
+@@ -1506,7 +1506,7 @@
+ 		return s_launcher ? s_launcher->GetOrCreateTexture(key, rgba, width, height) : nullptr;
+ 	});
+ 	ImGui::SetCurrentContext(previous);
+-	HostTools::StartUpdateCheck();
++	// This custom package is updated manually; upstream releases use a different package identity.
+ 
+ 	CafeSystem::SetImplementation(&s_systemImplementation);
+ 	if (!options.launchPath.empty())
+diff --git a/src/gui/host/uwp/HostMainUWP.cpp b/src/gui/host/uwp/HostMainUWP.cpp
+--- a/src/gui/host/uwp/HostMainUWP.cpp
++++ b/src/gui/host/uwp/HostMainUWP.cpp
+@@ -181,7 +181,7 @@
+ 
+ 	fs::path _LaunchPathFromProtocol(const IActivatedEventArgs& args)
+ 	{
+-		// cemu:?path=<game> (or cmd=<game>, the convention used by Xbox frontends for Dolphin/RetroArch)
++		// cemu-botw-precache:?path=<game> (or cmd=<game>, the convention used by Xbox frontends for Dolphin/RetroArch)
+ 		auto protocolArgs = args.as<ProtocolActivatedEventArgs>();
+ 		auto query = protocolArgs.Uri().QueryParsed();
+ 		for (uint32_t i = 0; i < query.Size(); i++)

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="572" height="28" viewBox="0 0 572 28" role="img" aria-labelledby="title">
+  <title id="title">Source patches · Xbox Dev Mode · Direct3D 12 · Experimental</title>
+  <g font-family="Segoe UI,Arial,sans-serif" font-size="11" font-weight="600" text-anchor="middle">
+    <rect x=".5" y=".5" width="126" height="27" rx="6" fill="#122E31" stroke="#315A56"/>
+    <text x="63" y="18" fill="#8BE2C5">SOURCE PATCHES</text>
+    <rect x="136.5" y=".5" width="139" height="27" rx="6" fill="#122E31" stroke="#315A56"/>
+    <text x="206" y="18" fill="#C2DCD3">XBOX DEV MODE</text>
+    <rect x="285.5" y=".5" width="124" height="27" rx="6" fill="#122E31" stroke="#315A56"/>
+    <text x="347" y="18" fill="#C2DCD3">DIRECT3D 12</text>
+    <rect x="419.5" y=".5" width="152" height="27" rx="6" fill="#302E24" stroke="#6B5B3D"/>
+    <text x="496" y="18" fill="#E3C484">EXPERIMENTAL</text>
+  </g>
+</svg>

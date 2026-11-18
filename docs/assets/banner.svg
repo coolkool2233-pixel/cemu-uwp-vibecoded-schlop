@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="440" viewBox="0 0 1280 440" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">Cemu BOTW Precache — Prepare first. Play next.</title>
+  <desc id="description">A dark teal banner with gold and mint circuit paths connecting recorded shaders to pipeline preparation.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1280" y2="440" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B2026"/><stop offset="1" stop-color="#071318"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(990 190) rotate(90) scale(310 380)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#24796B" stop-opacity=".3"/><stop offset="1" stop-color="#24796B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trace" x1="720" y1="260" x2="1170" y2="160" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#76DEC3"/><stop offset="1" stop-color="#E3C484"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" stroke="#6DBCA9" stroke-opacity=".06"/>
+    </pattern>
+    <clipPath id="bounds"><rect width="1280" height="440" rx="22"/></clipPath>
+  </defs>
+  <g clip-path="url(#bounds)">
+    <rect width="1280" height="440" rx="22" fill="url(#background)"/>
+    <rect width="1280" height="440" fill="url(#glow)"/>
+    <path d="M670 0H1280V440H670Z" fill="url(#grid)"/>
+    <path d="M892-55 1139 88V374L892 517 645 374V88Z" stroke="#76DEC3" stroke-opacity=".08"/>
+    <path d="m1019-47 247 143v286l-247 143-247-143V96Z" stroke="#76DEC3" stroke-opacity=".08"/>
+    <path d="M0 1H1280" stroke="#76DEC3" stroke-opacity=".5" stroke-width="2"/>
+
+    <g transform="translate(56 45)">
+      <path d="m21 0 18 10v21L21 42 3 31V10Z" fill="#76DEC3" fill-opacity=".08" stroke="#76DEC3"/>
+      <path d="m13 14-6 7 6 7m16-14 6 7-6 7M24 12l-6 18" stroke="#76DEC3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="57" y="26" fill="#B6D2CB" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="600" letter-spacing="2.4">CEMU BOTW PRECACHE</text>
+    </g>
+    <text x="56" y="178" fill="#F2F6EE" font-family="Segoe UI,Arial,sans-serif" font-size="76" font-weight="700" letter-spacing="-3">Prepare first.</text>
+    <text x="56" y="260" fill="#83E2C6" font-family="Segoe UI,Arial,sans-serif" font-size="76" font-weight="700" letter-spacing="-3">Play next.</text>
+    <text x="60" y="311" fill="#A4B7B4" font-family="Segoe UI,Arial,sans-serif" font-size="20">Bring recorded pipelines to the loading screen.</text>
+    <path d="M60 352H601" stroke="#37504F"/>
+    <text x="60" y="386" fill="#E3C484" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" letter-spacing="2">XBOX DEV MODE</text>
+    <circle cx="224" cy="381" r="2" fill="#50635F"/>
+    <text x="244" y="386" fill="#A4B7B4" font-family="Segoe UI,Arial,sans-serif" font-size="14" letter-spacing="2">DIRECT3D 12</text>
+    <circle cx="390" cy="381" r="2" fill="#50635F"/>
+    <text x="410" y="386" fill="#A4B7B4" font-family="Segoe UI,Arial,sans-serif" font-size="14" letter-spacing="2">BOTW EU</text>
+
+    <path d="M729 282h49l36-36h61m-67-42h67m108 0h54l36-36h76" stroke="#5B8F80" stroke-opacity=".22" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M729 282h49l36-36h61m-67-42h67m108 0h54l36-36h76" stroke="url(#trace)" stroke-width="2" stroke-linejoin="round"/>
+    <g transform="translate(692 167)">
+      <rect width="116" height="94" rx="12" fill="#0E292D" stroke="#3E7167"/>
+      <rect x="-14" y="14" width="116" height="94" rx="12" fill="#10292D" stroke="#3E7167"/>
+      <rect x="-28" y="28" width="116" height="94" rx="12" fill="#123137" stroke="#76DEC3"/>
+      <path d="M-7 55h51m-51 15h68m-68 15h40" stroke="#76DEC3" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="67" cy="102" r="3" fill="#76DEC3"/>
+    </g>
+    <g transform="translate(868 144)">
+      <rect width="120" height="120" rx="20" fill="#112C2E" stroke="#76DEC3" stroke-opacity=".8"/>
+      <path d="m60 27 29 17v33L60 94 31 77V44Z" fill="#76DEC3" fill-opacity=".08" stroke="#76DEC3" stroke-width="2"/>
+      <path d="m31 44 29 17 29-17M60 61v33" stroke="#76DEC3" stroke-width="2"/>
+      <path d="M18 0v-12m21 12v-12m21 12v-12m21 12v-12m21 12v-12M18 120v12m21-12v12m21-12v12m21-12v12m21-12v12" stroke="#426F62" stroke-width="2"/>
+    </g>
+    <g transform="translate(1080 124)">
+      <rect width="112" height="88" rx="14" fill="#242E29" stroke="#E3C484"/>
+      <path d="m47 25 27 19-27 19V25Z" fill="#E3C484"/>
+      <circle cx="95" cy="15" r="3" fill="#E3C484"/>
+    </g>
+    <text x="664" y="330" fill="#8EB6AB" font-family="Segoe UI,Arial,sans-serif" font-size="13" letter-spacing="1.8">RECORD</text>
+    <text x="890" y="310" fill="#8EB6AB" font-family="Segoe UI,Arial,sans-serif" font-size="13" letter-spacing="1.8">PREPARE</text>
+    <text x="1112" y="254" fill="#E3C484" font-family="Segoe UI,Arial,sans-serif" font-size="13" letter-spacing="1.8">PLAY</text>
+    <path d="M1130 331h64m-32-32v64M665 110h24m-12-12v24" stroke="#6D9E8F" stroke-opacity=".45"/>
+    <circle cx="1036" cy="81" r="3" fill="#E3C484" fill-opacity=".65"/>
+    <circle cx="824" cy="360" r="2" fill="#76DEC3" fill-opacity=".65"/>
+    <rect x=".5" y=".5" width="1279" height="439" rx="21.5" stroke="#8FD5BC" stroke-opacity=".16"/>
+  </g>
+</svg>

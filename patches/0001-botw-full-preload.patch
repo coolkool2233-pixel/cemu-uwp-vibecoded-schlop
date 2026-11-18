@@ -1,0 +1,174 @@
+diff --git a/src/Cafe/CMakeLists.txt b/src/Cafe/CMakeLists.txt
+index ce5ba68..65c25c8 100644
+--- a/src/Cafe/CMakeLists.txt
++++ b/src/Cafe/CMakeLists.txt
+@@ -569,6 +569,7 @@ if (ENABLE_D3D12)
+     HW/Latte/Renderer/D3D12/D3D12Memory.h
+     HW/Latte/Renderer/D3D12/D3D12PipelineCache.cpp
+     HW/Latte/Renderer/D3D12/D3D12PipelineCache.h
++    HW/Latte/Renderer/D3D12/D3D12PreloadPolicy.h
+     HW/Latte/Renderer/D3D12/D3D12Query.cpp
+     HW/Latte/Renderer/D3D12/D3D12Renderer.cpp
+     HW/Latte/Renderer/D3D12/D3D12Renderer.h
+diff --git a/src/Cafe/HW/Latte/Core/LatteShaderCache.cpp b/src/Cafe/HW/Latte/Core/LatteShaderCache.cpp
+index a6225bd..a382cf9 100644
+--- a/src/Cafe/HW/Latte/Core/LatteShaderCache.cpp
++++ b/src/Cafe/HW/Latte/Core/LatteShaderCache.cpp
+@@ -20,6 +20,7 @@
+ #include "Cafe/HW/Latte/Renderer/D3D12/RendererShaderD3D12.h"
+ #include "Cafe/HW/Latte/Renderer/D3D12/D3D12Renderer.h"
+ #include "Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.h"
++#include "Cafe/HW/Latte/Renderer/D3D12/D3D12PreloadPolicy.h"
+ #endif
+ #ifdef ENABLE_METAL
+ #include "Cafe/HW/Latte/Renderer/Metal/RendererShaderMtl.h"
+@@ -533,7 +534,9 @@ void LatteShaderCache_Load()
+ 
+ 	bool pipelinePhase = false;
+ #ifdef ENABLE_D3D12
+-	pipelinePhase = g_renderer->GetType() == RendererAPI::D3D12 && GetConfig().precompile_pipelines.GetValue();
++	const auto d3d12Preload = D3D12PreloadPolicy::Resolve(cacheTitleId, GetConfig().precompile_pipelines.GetValue(),
++		GetConfig().precompile_in_background.GetValue(), GetConfig().botw_full_preload.GetValue());
++	pipelinePhase = g_renderer->GetType() == RendererAPI::D3D12 && d3d12Preload.enabled;
+ #endif
+ #if defined(ENABLE_VULKAN) || defined(ENABLE_METAL)
+ 	pipelinePhase |= g_renderer->GetType() == RendererAPI::Vulkan || g_renderer->GetType() == RendererAPI::Metal;
+@@ -568,7 +571,7 @@ void LatteShaderCache_Load()
+ #ifdef ENABLE_D3D12
+ 	if (g_renderer->GetType() == RendererAPI::D3D12)
+ 	{
+-		if (GetConfig().precompile_pipelines.GetValue())
++		if (d3d12Preload.enabled)
+ 			LatteShaderCache_LoadPipelineCache(cacheTitleId);
+ 		if (pipelinePhase)
+ 		{
+@@ -708,7 +711,9 @@ void LatteShaderCache_LoadPipelineCache(uint64 cacheTitleId)
+ 	// D3D12 quick start (Settings → "in the background"): the loading screen only creates the startup set, the rest is
+ 	// created while the game runs (D3D12PipelineCache::TickBackgroundPreload)
+ #ifdef ENABLE_D3D12
+-	const bool quickStart = g_renderer->GetType() == RendererAPI::D3D12 && GetConfig().precompile_in_background.GetValue();
++	const auto d3d12Preload = D3D12PreloadPolicy::Resolve(cacheTitleId, GetConfig().precompile_pipelines.GetValue(),
++		GetConfig().precompile_in_background.GetValue(), GetConfig().botw_full_preload.GetValue());
++	const bool quickStart = g_renderer->GetType() == RendererAPI::D3D12 && d3d12Preload.startupOnly;
+ #endif
+ 	// opening the pipeline caches takes seconds (D3D12 on a PC: the driver's pipeline library), show the bar meanwhile
+ 	g_shaderCacheLoaderState.pipelineFileCount = 0;
+@@ -729,7 +734,9 @@ void LatteShaderCache_LoadPipelineCache(uint64 cacheTitleId)
+ #endif
+ #ifdef ENABLE_D3D12
+ 	case RendererAPI::D3D12:
+-		g_shaderCacheLoaderState.pipelineFileCount = D3D12Renderer::GetInstance()->GetPipelineCache()->BeginPreload(cacheTitleId, quickStart);
++		if (d3d12Preload.includeStale)
++			cemuLog_log(LogType::Force, "D3D12: BOTW full preload: preparing all recorded pipelines before gameplay (including old entries)");
++		g_shaderCacheLoaderState.pipelineFileCount = D3D12Renderer::GetInstance()->GetPipelineCache()->BeginPreload(cacheTitleId, quickStart, d3d12Preload.includeStale);
+ 		break;
+ #endif
+ 	}
+diff --git a/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.cpp b/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.cpp
+index c4cb05f..b8d0028 100644
+--- a/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.cpp
++++ b/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.cpp
+@@ -1211,7 +1211,7 @@ bool D3D12PipelineCache::ResolveRecordedShaders(D3D12PipelineCompileJob& job)
+ 	return true;
+ }
+ 
+-uint32 D3D12PipelineCache::BeginPreload(uint64 titleId, bool startupOnly)
++uint32 D3D12PipelineCache::BeginPreload(uint64 titleId, bool startupOnly, bool includeStale)
+ {
+ 	OpenDiskCaches(titleId);
+ 	m_preload = {};
+@@ -1231,7 +1231,7 @@ uint32 D3D12PipelineCache::BeginPreload(uint64 titleId, bool startupOnly)
+ 	for (uint32 i = 0; i < (uint32)records.size(); i++)
+ 	{
+ 		usage[i] = m_recordFile->GetUsage(records[i]);
+-		stale[i] = session - usage[i].lastSession >= kSkipAfterSessions;
++		stale[i] = !includeStale && session - usage[i].lastSession >= kSkipAfterSessions;
+ 		staleCount += stale[i] ? 1 : 0;
+ 	}
+ 	if (staleCount)
+diff --git a/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.h b/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.h
+index 2e5241b..f88a972 100644
+--- a/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.h
++++ b/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PipelineCache.h
+@@ -59,7 +59,8 @@ public:
+ 	// repeatedly and returns false once all are done.
+ 	// startupOnly (Settings → quick start): only the startup set (what earlier sessions needed right after loading) is
+ 	// created on the loading screen, ContinuePreloadInBackground then creates the rest while the game runs
+-	uint32 BeginPreload(uint64 titleId, bool startupOnly = false);
++	// includeStale also selects entries unused for 20 sessions (BOTW full preload).
++	uint32 BeginPreload(uint64 titleId, bool startupOnly = false, bool includeStale = false);
+ 	bool UpdatePreload(uint32& finishedCount, bool blocking = true);
+ 	void EndPreload();
+ 	void ContinuePreloadInBackground();
+diff --git a/src/config/CemuConfig.cpp b/src/config/CemuConfig.cpp
+index 599553c..037bfdb 100644
+--- a/src/config/CemuConfig.cpp
++++ b/src/config/CemuConfig.cpp
+@@ -156,6 +156,7 @@ XMLConfigParser CemuConfig::Load(XMLConfigParser& parser)
+ 	fullscreen_scaling = graphic.get("FullscreenScaling", kKeepAspectRatio);
+ 	async_compile = graphic.get("AsyncCompile", async_compile);
+ 	precompile_pipelines = graphic.get("PrecompilePipelines", precompile_pipelines);
++	botw_full_preload = graphic.get("BotwFullPreload", botw_full_preload);
+ 	precompile_in_background = graphic.get("PrecompileInBackground", precompile_in_background);
+ 	// the default changed to on (quick start, #567); a saved off was almost always the old default, move it once
+ 	if (!graphic.get("PrecompileInBackgroundDefaultOn", false))
+@@ -411,6 +412,7 @@ XMLConfigParser CemuConfig::Save(XMLConfigParser& parser)
+ 	graphic.set("FullscreenScaling", fullscreen_scaling);
+ 	graphic.set("AsyncCompile", async_compile.GetValue());
+ 	graphic.set("PrecompilePipelines", precompile_pipelines.GetValue());
++	graphic.set("BotwFullPreload", botw_full_preload.GetValue());
+ 	graphic.set("PrecompileInBackground", precompile_in_background.GetValue());
+ 	graphic.set("PrecompileInBackgroundDefaultOn", true);
+ 	graphic.set("FrameInterpolation", frame_interpolation.GetValue());
+diff --git a/src/config/CemuConfig.h b/src/config/CemuConfig.h
+index 30d318a..4c6cf71 100644
+--- a/src/config/CemuConfig.h
++++ b/src/config/CemuConfig.h
+@@ -461,6 +461,7 @@ struct CemuConfig
+ 	ConfigValue<bool> render_upside_down{ false };
+ 	ConfigValue<bool> async_compile{ true };
+ 	ConfigValue<bool> precompile_pipelines{ true }; // D3D12: create all previously used pipelines while the game loads
++	ConfigValue<bool> botw_full_preload{ false }; // D3D12: preload all recorded BOTW EU pipelines, including old entries
+ 	ConfigValue<bool> precompile_in_background{ true }; // D3D12 quick start: only the startup set on the loading screen, create the rest while the game runs instead of on the loading screen
+ 	ConfigValue<int> pipeline_wait{ 0 }; // D3D12: how long draws wait for a new pipeline: 0 never (smooth, skips the draw), 1 balanced (2 s per 4 s), 2 always (accurate)
+ #ifdef CEMU_UWP
+diff --git a/src/gui/host/HostUI.cpp b/src/gui/host/HostUI.cpp
+index 45d0ce3..1b2d023 100644
+--- a/src/gui/host/HostUI.cpp
++++ b/src/gui/host/HostUI.cpp
+@@ -1524,6 +1524,14 @@ namespace
+ 			}
+ 			ImGui::Unindent(40.0f * s_scale);
+ 		}
++		bool botwFullPreload = config.botw_full_preload.GetValue();
++		if (ImGui::Checkbox(_TR("BOTW EU: preload all recorded pipelines before play (longer loading, more memory)"), &botwFullPreload))
++		{
++			config.botw_full_preload = botwFullPreload;
++			changed = true;
++		}
++		if (botwFullPreload)
++			ImGui::TextWrapped(_TR("For title 00050000101c9400: enables pipeline loading and overrides Quick start. Requires existing shader and D3D12 pipeline caches."));
+ 		if (asyncCompile)
+ 		{
+ 			const char* waitModes[] = { _TR("Smooth: never wait, new effects can pop in"), _TR("Balanced: short waits, rarely misses an effect"), _TR("Accurate: always wait, stutters") };
+diff --git a/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PreloadPolicy.h b/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PreloadPolicy.h
+new file mode 100644
+index 0000000..43d1f5b
+--- /dev/null
++++ b/src/Cafe/HW/Latte/Renderer/D3D12/D3D12PreloadPolicy.h
+@@ -0,0 +1,15 @@
++#pragma once
++
++// Uses Cemu's uint64 alias from the shared precompiled header.
++struct D3D12PreloadPolicy
++{
++	bool enabled;
++	bool startupOnly;
++	bool includeStale;
++
++	static constexpr D3D12PreloadPolicy Resolve(uint64 titleId, bool precompile, bool background, bool botwFullPreload)
++	{
++		const bool fullPreload = botwFullPreload && titleId == 0x00050000101c9400ULL;
++		return { precompile || fullPreload, background && !fullPreload, fullPreload };
++	}
++};
