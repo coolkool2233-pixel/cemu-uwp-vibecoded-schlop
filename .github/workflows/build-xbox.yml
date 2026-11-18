@@ -1,0 +1,176 @@
+name: Build Xbox MSIX
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coderabbit/precache-botw-shaders/152ae662
+    paths:
+      - .github/workflows/build-xbox.yml
+      - patches/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xbox-msix-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Cemu BOTW Precache · x64 UWP
+    runs-on: windows-2022
+    timeout-minutes: 180
+    defaults:
+      run:
+        working-directory: cemu
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/cemu/dependencies/vcpkg
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg-cache,readwrite
+      VCPKG_FORCE_DOWNLOADED_BINARIES: 'true'
+    steps:
+      - name: Check out our patches
+        uses: actions/checkout@v6
+        with:
+          path: project
+          persist-credentials: false
+
+      - name: Check out pinned Cemu-UWP source
+        uses: actions/checkout@v6
+        with:
+          repository: PrismFox67/Cemu-UWP
+          ref: 522d3498b5a8b3854d01909950c3738de5c94aa2
+          path: cemu
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Apply both patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply --check --whitespace=error-all ../project/patches/0001-botw-full-preload.patch
+          git apply ../project/patches/0001-botw-full-preload.patch
+          git apply --check --whitespace=error-all ../project/patches/0002-independent-xbox-package.patch
+          git apply ../project/patches/0002-independent-xbox-package.patch
+
+      # Match the upstream Windows 2022 UWP workflow and generator.
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.29.0'
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg-cache
+          key: windows-2022-uwp-522d349-v1-${{ hashFiles('cemu/vcpkg.json', 'cemu/dependencies/vcpkg_triplets/**', 'cemu/dependencies/vcpkg_overlay_ports/**', 'cemu/dependencies/vcpkg_overlay_ports_win/**') }}
+
+      - name: Bootstrap vcpkg
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force "$env:GITHUB_WORKSPACE/vcpkg-cache" | Out-Null
+          & ./dependencies/vcpkg/bootstrap-vcpkg.bat -disableMetrics
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed: $LASTEXITCODE" }
+
+      - name: Set package version and create test signing certificate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifestPath = Join-Path $PWD 'src/gui/host/uwp/Package.appxmanifest'
+          [xml]$manifest = Get-Content $manifestPath -Raw
+          if ($manifest.Package.Identity.Name -ne 'Coolkool2233Pixel.CemuBOTWPrecache') {
+            throw 'Custom package identity is missing'
+          }
+          $buildNumber = 900 + [int]$env:GITHUB_RUN_NUMBER
+          if ($buildNumber -gt 65535) { throw 'Package build number exceeds the MSIX version limit' }
+          $manifest.Package.Identity.Version = "0.1.$buildNumber.0"
+          $manifest.Save($manifestPath)
+          $subject = [string]$manifest.Package.Identity.Publisher
+          if ($subject -ne 'CN=Coolkool2233Pixel.CemuBOTWPrecache') {
+            throw 'Custom signing publisher is missing'
+          }
+          $cert = New-SelfSignedCertificate -Type Custom -Subject $subject -KeyUsage DigitalSignature `
+            -FriendlyName 'Cemu BOTW Precache test signing' -CertStoreLocation 'Cert:\CurrentUser\My' `
+            -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3', '2.5.29.19={text}')
+          $password = ConvertTo-SecureString 'cemu' -AsPlainText -Force
+          Export-PfxCertificate -Cert $cert -FilePath "$env:RUNNER_TEMP/CemuBOTWPrecache.pfx" -Password $password | Out-Null
+          Export-Certificate -Cert $cert -FilePath "$env:RUNNER_TEMP/CemuBOTWPrecache.cer" | Out-Null
+
+      - name: Configure UWP build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build-uwp -G "Visual Studio 17 2022" -A x64 \
+            -DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0 \
+            -DVCPKG_INSTALL_OPTIONS="--clean-after-build" 2>&1 | tee cmake.log
+
+      - name: Compile and sign MSIX
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & cmake --build build-uwp --config Release --target CemuBin -- -m `
+            '-p:GenerateAppxPackageOnBuild=true' '-p:AppxBundle=Never' `
+            '-p:UapAppxPackageBuildMode=SideloadOnly' '-p:AppxPackageSigningEnabled=true' `
+            "-p:PackageCertificateKeyFile=$env:RUNNER_TEMP/CemuBOTWPrecache.pfx" `
+            '-p:PackageCertificatePassword=cemu' "-p:AppxPackageDir=$env:GITHUB_WORKSPACE/AppPackages/" `
+            2>&1 | Tee-Object -FilePath build.log
+          if ($LASTEXITCODE -ne 0) { throw "Cemu build failed: $LASTEXITCODE" }
+
+      - name: Verify package identity and collect Xbox download
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $packages = @(Get-ChildItem "$env:GITHUB_WORKSPACE/AppPackages" -Recurse -Filter *.msix |
+            Where-Object { $_.FullName -notmatch '[\\/]Dependencies[\\/]' })
+          if ($packages.Count -ne 1) { throw "Expected one app MSIX, found $($packages.Count)" }
+          $package = $packages[0]
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($package.FullName)
+          try {
+            $entry = $archive.GetEntry('AppxManifest.xml')
+            if (-not $entry -or -not $archive.GetEntry('AppxSignature.p7x')) {
+              throw 'Package manifest or signature is missing'
+            }
+            $reader = [System.IO.StreamReader]::new($entry.Open())
+            try { [xml]$manifest = $reader.ReadToEnd() } finally { $reader.Dispose() }
+            if ($manifest.Package.Identity.Name -ne 'Coolkool2233Pixel.CemuBOTWPrecache' -or
+                $manifest.Package.Identity.Publisher -ne 'CN=Coolkool2233Pixel.CemuBOTWPrecache' -or
+                $manifest.Package.Identity.ProcessorArchitecture -ne 'x64') {
+              throw 'Built MSIX has the wrong package identity or architecture'
+            }
+          } finally { $archive.Dispose() }
+          $staging = "$env:GITHUB_WORKSPACE/xbox-download"
+          New-Item -ItemType Directory -Force $staging | Out-Null
+          Copy-Item "$($package.DirectoryName)/*" $staging -Recurse
+          Copy-Item "$env:RUNNER_TEMP/CemuBOTWPrecache.cer" $staging
+          if (Get-ChildItem $staging -Recurse -Include *.pfx,*.pem,*.key) {
+            throw 'Private signing material must not be included in the download'
+          }
+          [ordered]@{
+            projectCommit = $env:GITHUB_SHA
+            upstreamCommit = '522d3498b5a8b3854d01909950c3738de5c94aa2'
+            packageName = [string]$manifest.Package.Identity.Name
+            packageVersion = [string]$manifest.Package.Identity.Version
+            architecture = 'x64'
+          } | ConvertTo-Json | Set-Content "$staging/build-info.json"
+          Compress-Archive -Path "$staging/*" -DestinationPath "$env:GITHUB_WORKSPACE/cemu-botw-precache-uwp-x64.zip"
+
+      - name: Upload installable package
+        uses: actions/upload-artifact@v6
+        with:
+          name: cemu-botw-precache-uwp-x64
+          path: cemu-botw-precache-uwp-x64.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: xbox-build-logs
+          path: |
+            cemu/cmake.log
+            cemu/build.log
+            cemu/dependencies/vcpkg/buildtrees/**/*-err.log
+          if-no-files-found: ignore
+          retention-days: 14

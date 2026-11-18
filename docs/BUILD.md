@@ -1,5 +1,7 @@
 <!-- coderabbit-ai-generated:v1 -->
 
+<!-- coderabbit-ai-generated-section:v1:72e9c7f1c1216ba5dcb62b32b4d09179add2c5b72e70cb1983440cf7678bc9f8 -->
+
 <!-- coderabbit-ai-generated-section:v1:9ecd51a28a35256cf798f0abe6672a694e2d4a3c14c3684fc1140fe3e53c4ead -->
 
 <!-- coderabbit-ai-generated-section:v1:fe5b85bbfb07a9b67e9550758437006df6b4f96308d34d3ffb470da0f1c6070b -->
@@ -67,6 +69,19 @@ Equivalent values inside the existing `<Graphic>` element (edit while Cemu is fu
 ```
 
 The migration marker is needed on the pinned version: without it, configuration loading turns Quick start back on once. The launcher saves the marker itself when saving settings.
+
+## Build in GitHub Actions
+
+The **[Build Xbox MSIX workflow](https://github.com/coolkool2233-pixel/idfk/actions/workflows/build-xbox.yml)** compiles the pinned upstream source with both patches on a Windows 2022 runner. A workflow file alone does not establish a successful build; check the selected run's result.
+
+1. Open the workflow in the repository's **Actions** tab. The first workflow push starts a build on the task branch. For another attempt, select **Run workflow** and choose the branch containing the patches.
+2. Wait for **Cemu BOTW Precache · x64 UWP** to succeed. A cold dependency build can take an hour or more.
+3. In that run's **Artifacts** section, download `cemu-botw-precache-uwp-x64`. Extract the Actions artifact, then extract the package ZIP inside it.
+4. Install the MSIX through Xbox Device Portal, using any included x64 dependencies required by your device. The download includes the public test signing certificate and `build-info.json` identifying the project commit, upstream commit and package version. Private signing material is excluded.
+
+The workflow verifies the generated package's custom name, publisher, x64 architecture and presence of a signature entry before uploading. A successful build still needs an Xbox installation/gameplay test. If the workflow fails, open its failing step or download `xbox-build-logs` from the run. Private-repository Actions access and runner availability depend on your GitHub account/repository settings.
+
+The workflow version starts at `0.1.901.0` and increments with its run number. Builds use a temporary self-signed test certificate; this workflow does not publish a release or deploy to a console.
 
 ## Apply and build the patch
 

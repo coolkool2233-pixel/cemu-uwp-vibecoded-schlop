@@ -1,5 +1,7 @@
 <!-- coderabbit-ai-generated:v1 -->
 
+<!-- coderabbit-ai-generated-section:v1:e82e3a98983f452b5356c169c6e93bda90ddb5e714ca0897fe6086f2b78d822d -->
+
 <!-- coderabbit-ai-generated-section:v1:a0eac20901fddc6613d3d00a47b47fe67d505c3156b3602ffa26c3276c50b500 -->
 
 <p align="center">
@@ -41,7 +43,7 @@ Cemu compiles new shaders and graphics pipelines as it encounters them. This pro
 
 ### 01 · Build your package
 
-Follow the **[build & setup guide](docs/BUILD.md#apply-and-build-the-patch)** to check out the pinned Cemu-UWP revision, apply both patches in order, and build a signed MSIX on Windows.
+Use **[GitHub Actions](docs/BUILD.md#build-in-github-actions)** to compile on a Windows runner and download the signed MSIX after a successful run. You can also follow the **[local build guide](docs/BUILD.md#apply-and-build-the-patch)** on your own Windows PC.
 
 Already using the first patch? Apply only `0002` to add the separate package identity, then rebuild.
 
